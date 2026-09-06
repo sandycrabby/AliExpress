@@ -1,0 +1,33 @@
+[project]
+name = "aliexpress-monitor"
+version = "0.1.0"
+description = "Always-on AliExpress price monitor with Telegram alerts"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "python-telegram-bot[job-queue]==21.11",
+    "playwright==1.49.1",
+    "python-dotenv==1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.3.5",
+    "pytest-asyncio==0.25.3",
+]
+
+[project.scripts]
+aliexpress-monitor = "aliexpress_monitor.app:main"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
+
+[tool.setuptools.packages.find]
+include = ["aliexpress_monitor*"]
