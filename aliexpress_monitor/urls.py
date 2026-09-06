@@ -60,6 +60,21 @@ def fetch_url(product_id: str, ship_to: str, original: str | None = None) -> str
     return f"{base}?gatewayAdapt=glo2usa&_randl_shipto={country}"
 
 
+def fetch_url_candidates(
+    product_id: str,
+    ship_to: str,
+    original: str | None = None,
+) -> list[str]:
+    """Primary product URL plus a US-storefront fallback (often less aggressive)."""
+    primary = fetch_url(product_id, ship_to, original)
+    candidates = [primary]
+    if (ship_to or "US").upper() == "US":
+        us_url = f"https://www.aliexpress.us/item/{product_id}.html"
+        if "aliexpress.us" not in urlparse(primary).netloc.lower():
+            candidates.append(us_url)
+    return candidates
+
+
 def looks_like_aliexpress(value: str) -> bool:
     text = (value or "").strip()
     if _BARE_ID_RE.fullmatch(text):

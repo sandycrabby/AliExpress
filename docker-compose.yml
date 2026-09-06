@@ -11,4 +11,5 @@ services:
       - ./data:/app/data
     ports:
       - "8080:8080"
+    shm_size: "1gb"
     restart: unless-stopped

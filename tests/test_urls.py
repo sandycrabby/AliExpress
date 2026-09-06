@@ -5,6 +5,7 @@ from aliexpress_monitor.urls import (
     canonical_url,
     extract_product_id,
     fetch_url,
+    fetch_url_candidates,
     looks_like_aliexpress,
 )
 
@@ -37,6 +38,19 @@ def test_canonical_and_fetch_url_keep_host_and_pin_shipto():
     assert "aliexpress.us" in us
     de = fetch_url(product_id, "DE", original)
     assert "_randl_shipto=DE" in de
+
+
+def test_fetch_url_candidates_add_us_fallback():
+    urls = fetch_url_candidates("1005001234567890", "US")
+    assert any("aliexpress.com" in u for u in urls)
+    assert any("aliexpress.us" in u for u in urls)
+    us_only = fetch_url_candidates(
+        "1005001234567890",
+        "US",
+        "https://www.aliexpress.us/item/1005001234567890.html",
+    )
+    assert len(us_only) == 1
+    assert "aliexpress.us" in us_only[0]
 
 
 def test_looks_like_aliexpress():

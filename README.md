@@ -174,7 +174,7 @@ GitHub Actions runs the same suite.
 ## How price checks work
 
 1. The scheduler (or `/check`) loads each watch from SQLite.
-2. In `playwright` mode, Chromium opens the product page with an `aep_usuc_f` cookie that pins locale, currency, and ship-to region.
+2. In `playwright` mode, Chromium opens the product page with an `aep_usuc_f` cookie that pins locale, currency, and ship-to region. If the global site serves a captcha for a US watch, it retries `aliexpress.us`.
 3. The app reads `window.runParams` when present, then JSON-LD, then a few visible price nodes.
 4. For listings with several SKUs it stores the **lowest** visible/SKU price (the “from” price).
 5. The reading is appended to `price_history` with a UTC timestamp.

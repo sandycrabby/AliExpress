@@ -16,7 +16,7 @@ from aliexpress_monitor.parse import (
     is_blocked,
     parse_money,
 )
-from aliexpress_monitor.urls import fetch_url
+from aliexpress_monitor.urls import fetch_url_candidates
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +143,11 @@ class PlaywrightFetcher:
         self._playwright = await async_playwright().start()
         self._browser = await self._playwright.chromium.launch(
             headless=self.headless,
-            args=["--disable-blink-features=AutomationControlled"],
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+            ],
         )
 
     async def close(self) -> None:
@@ -172,12 +176,26 @@ class PlaywrightFetcher:
         ship_to: str,
         currency: str,
     ) -> FetchResult:
-        target = fetch_url(product_id, ship_to, url)
         try:
             await self._ensure_browser()
         except Exception as exc:  # noqa: BLE001
             return FetchResult.failure(f"Could not start browser: {exc}", source="playwright")
 
+        last_failure: FetchResult | None = None
+        for target in fetch_url_candidates(product_id, ship_to, url):
+            result = await self._fetch_one(target, ship_to, currency)
+            if result.ok:
+                return result
+            last_failure = result
+            if result.blocked:
+                logger.info("Blocked on %s; trying next candidate if any", target)
+                continue
+            break
+        return last_failure or FetchResult.failure(
+            "No price could be fetched.", source="playwright"
+        )
+
+    async def _fetch_one(self, target: str, ship_to: str, currency: str) -> FetchResult:
         context = None
         try:
             context = await self._browser.new_context(
@@ -196,6 +214,7 @@ class PlaywrightFetcher:
                 ]
             )
             page = await context.new_page()
+            logger.info("Opening %s (ship-to %s/%s)", target, ship_to, currency)
             response = await page.goto(
                 target,
                 wait_until="domcontentloaded",
@@ -216,7 +235,7 @@ class PlaywrightFetcher:
             if is_blocked(html) and "runParams" not in html:
                 return FetchResult.failure(
                     "AliExpress served an anti-bot / captcha page. "
-                    "Try again later, or use a residential IP.",
+                    "Try again later from a home/residential network.",
                     blocked=True,
                     source="playwright",
                 )
@@ -236,7 +255,7 @@ class PlaywrightFetcher:
                 source="playwright",
             )
         except Exception as exc:  # noqa: BLE001
-            logger.exception("Playwright fetch failed for %s", product_id)
+            logger.exception("Playwright fetch failed for %s", target)
             return FetchResult.failure(f"Browser fetch failed: {exc}", source="playwright")
         finally:
             if context is not None:
