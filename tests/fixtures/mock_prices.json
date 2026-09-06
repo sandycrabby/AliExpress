@@ -1,0 +1,20 @@
+{
+  "1005001111111111": {
+    "price": 89.5,
+    "title": "200W Solar Panel Kit",
+    "currency": "USD"
+  },
+  "1005002222222222": {
+    "price": 129.0,
+    "title": "12V 100Ah LiFePO4 Battery",
+    "currency": "USD"
+  },
+  "1005003333333333": {
+    "price": 45.0,
+    "title": "MPPT Charge Controller 40A",
+    "currency": "USD"
+  },
+  "1005009999999999": {
+    "error": "Listing not available in mock fixture"
+  }
+}

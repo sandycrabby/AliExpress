@@ -1,0 +1,14 @@
+services:
+  monitor:
+    build: .
+    env_file:
+      - .env
+    environment:
+      DATABASE_PATH: /app/data/monitor.db
+      STATUS_HOST: 0.0.0.0
+      STATUS_PORT: "8080"
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
